@@ -386,18 +386,18 @@ int main(void)
 
 // task scheduler /////////////////////////////////////////////////////////
 
-unsigned char temp;
-unsigned char sound;
-unsigned char motion;
+unsigned char temp = 70;
+unsigned char sound = 0;
+unsigned char motion = 0;
 unsigned char scrollIndex = 0;
 unsigned char text[] = "Temp C: --- Sound: - Motion: -";
 unsigned char update[30] = "Temp C: --- Sound: - Motion: -";
 unsigned char message[16] = "";
 
-enum scrollLcdStates {scrollWait, scrollPrint} scrollLcdState;
-enum updateSounds {S_wait, S_update} sound_state;
-enum updateTemps {T_wait, T_update} temp_state;
-enum updateMotions {M_wait, M_update} motion_state;
+enum scrollLcdStates {scrollWait, scrollPrint} scrollState;
+enum updateSounds {S_wait, S_update} S_state;
+enum updateTemps {T_wait, T_update} T_state;
+enum updateMotions {M_wait, M_update} M_state;
 
 void messageToSend(unsigned char string[], unsigned char index) {
 	for(char i = 0; i < 15; i++) {
@@ -417,13 +417,13 @@ void messageToSend(unsigned char string[], unsigned char index) {
 	
 }
 
-int scrollLcdTick(int state) {
+int scrollLcdTick(int scrollState) {
 	//Local variables
 	
 	//State machine transitions
-	switch (state) {
+	switch (scrollState) {
 		case scrollWait:
-			state = scrollPrint;
+			scrollState = scrollPrint;
 			break;
 		case scrollPrint:
 			if(scrollIndex < sizeof(text)) {
@@ -432,26 +432,26 @@ int scrollLcdTick(int state) {
 			else {
 				scrollIndex = 0;
 			}
-			state = scrollWait;
+			scrollState = scrollWait;
 			break;
 		default:
-			state = scrollWait;
+			scrollState = scrollWait;
 			break;
 	}
 	//State machine actions
-	switch (state) {
+	switch (scrollState) {
 		case scrollWait:
+			//LCD_DisplayString(1, "helloSS");
 			break;
 		case scrollPrint:
 			messageToSend(update, scrollIndex);
 			LCD_DisplayString(1, message);
 			break;
 		default:
-			state = scrollWait;
 			break;
 	}
 	
-	return state;
+	return scrollState;
 }
 
 int updateSound(int S_state){
@@ -461,6 +461,7 @@ int updateSound(int S_state){
 			break;
 		case S_update:
 			if(USART_HasReceived(0)){
+				LCD_DisplayString(1,"Received");
 				sound = USART_Receive(0);
 				S_state = S_wait;
 			}
@@ -469,10 +470,12 @@ int updateSound(int S_state){
 			}
 			break;
 		default:
+			S_state = S_wait;
 			break;
 	}	
 	switch(S_state){
 		case S_wait:
+			//LCD_DisplayString(1, "helloUS");
 			break;
 		case S_update:
 			if(sound == 0){
@@ -481,6 +484,7 @@ int updateSound(int S_state){
 			else {
 				update[19] = 'Y';
 			}
+			LCD_DisplayString(1, message);
 			break;
 		default:
 			break;
@@ -495,6 +499,7 @@ int updateTemp(int T_state){
 			break;
 		case T_update:
 			if(USART_HasReceived(0)){
+				LCD_DisplayString(1,"Received");
 				temp = USART_Receive(0);
 				T_state = T_wait;
 			}
@@ -503,10 +508,12 @@ int updateTemp(int T_state){
 			}
 			break;
 		default:
+			T_state = T_wait;
 			break;
 	}
 	switch(T_state){
 		case T_wait:
+			//LCD_DisplayString(1, "helloUT");
 			break;
 		case T_update:
 			if(temp < 100){
@@ -516,6 +523,7 @@ int updateTemp(int T_state){
 			else {
 				update[8] = temp;
 			}
+			LCD_DisplayString(1, message);
 			break;
 		default:
 			break;
@@ -530,6 +538,7 @@ int updateMotion(int M_state){
 			break;
 		case M_update:
 			if(USART_HasReceived(0)){
+				LCD_DisplayString(1,"Received");
 				motion = USART_Receive(0);
 				M_state = M_wait;
 			}
@@ -538,10 +547,12 @@ int updateMotion(int M_state){
 			}
 			break;
 		default:
+			M_state = M_wait;
 			break;
 	}
 	switch(M_state){
 		case M_wait:
+			//LCD_DisplayString(1, "helloUM");
 			break;
 		case M_update:
 			if(motion == 0){
@@ -550,6 +561,7 @@ int updateMotion(int M_state){
 			else {
 				update[29] = 'Y';
 			}
+			LCD_DisplayString(1, message);
 			break;
 		default:
 			break;
@@ -594,9 +606,9 @@ int main(void)
 	
 	//Task 1
 	task1.state = -1;
-	task1.period = scrollLcdPeriod;
-	task1.elapsedTime = scrollLcdPeriod;
-	task1.TickFct = &scrollLcdTick;
+	task1.period = motionPeriod;
+	task1.elapsedTime = motionPeriod;
+	task1.TickFct = &updateMotion;
 	
 	//Task 2
 	task2.state = -1;
@@ -612,14 +624,18 @@ int main(void)
 	
 	//Task 4
 	task4.state = -1;
-	task4.period = motionPeriod;
-	task4.elapsedTime = motionPeriod;
-	task4.TickFct = &updateMotion;
+	task4.period = scrollLcdPeriod;
+	task4.elapsedTime = scrollLcdPeriod;
+	task4.TickFct = &scrollLcdTick;
 	
 	TimerSet(GCD);
 	TimerOn();
 	
 	unsigned short i;
+	
+	LCD_ClearScreen();
+	LCD_DisplayString(1, "hello");
+	_delay_ms(100);
 	
 	while (1)
 	{// Scheduler code
@@ -632,6 +648,7 @@ int main(void)
 				tasks[i]->elapsedTime = 0;
 			}
 			tasks[i]->elapsedTime += GCD;
+			_delay_ms(100);
 		}
 		while(!TimerFlag);
 		TimerFlag = 0;

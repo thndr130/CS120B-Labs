@@ -246,7 +246,7 @@ int main(void)
 }
 */
 
-// task scheduler
+// task scheduler //////////////////////////////////////////////////////////
 
 unsigned short T_count = 0;
 unsigned short M_count = 0;
@@ -266,15 +266,17 @@ int Temp_Tick(int temp_state){
 	switch(temp_state){
 		case T_start:
 			temp_state = T_wait;
+			/*
 			while(!USART_IsSendReady(0));
 			USART_Send(0, 0);
 			while(!USART_HasTransmitted(0));
+			*/
 			break;
 		case T_wait:
-			if ( ((PINA&0x01) == 1) && T_count >= 2000 && !reset){
+			if ( ((PINA&0x01) == 1) && T_count >= 20 && !reset){
 				temp_state = T_high;
 			}
-			else if (reset && T_count >= 2000){
+			else if (reset && T_count >= 20){
 				temp_state = T_reset;
 			}
 			else {
@@ -291,6 +293,7 @@ int Temp_Tick(int temp_state){
 			temp_state = T_wait;
 			break;
 		default:
+			temp_state = T_wait;
 			break;
 	}
 	switch(temp_state){
@@ -301,11 +304,17 @@ int Temp_Tick(int temp_state){
 		case T_high:
 			adcResult = ADC;
 			temp = (char) ((adcResult - 500)/10);
+			if (USART_IsSendReady(0)){
+				USART_Send(temp, 0);
+			}
 			//lights = lights | 0x02;
 			//PORTD = lights;
 			break;
 		case T_reset:
 			temp = 70;
+			if (USART_IsSendReady(0)){
+				USART_Send(temp, 0);
+			}
 			//lights = 0;
 			//PORTD = lights;
 			break;
@@ -319,15 +328,17 @@ int Motion_Tick(int motion_state){
 	switch(motion_state){
 		case M_start:
 			motion_state = M_wait;
+			/*
 			while(!USART_IsSendReady(0));
 			USART_Send(0, 0);
 			while(!USART_HasTransmitted(0));
+			*/
 			break;
 		case M_wait:
-			if ( ((PINB&0x01) == 1) && M_count >= 2000 && !reset){ //if sound detector, detects sound go to S_high
+			if ( ((PINB&0x01) == 1) && M_count >= 20 && !reset){ //if sound detector, detects sound go to S_high
 				motion_state = M_high;
 			}
-			else if ( reset && (M_count >= 2000)){ // go to S_low
+			else if ( reset && (M_count >= 20)){ // go to S_low
 				motion_state = M_reset;
 			}
 		
@@ -345,6 +356,7 @@ int Motion_Tick(int motion_state){
 			motion_state = M_wait;
 			break;
 		default:
+			motion_state = M_wait;
 			break;
 	}
 	switch(motion_state){
@@ -354,11 +366,17 @@ int Motion_Tick(int motion_state){
 			break;
 		case M_high:
 			motion = 1;
+			if (USART_IsSendReady(0)){
+				USART_Send(motion, 0);
+			}
 			//lights = lights | 0x01;
 			//PORTD = lights;
 			break;
 		case M_reset:
 			motion = 0;
+			if (USART_IsSendReady(0)){
+				USART_Send(motion, 0);
+			}
 			//lights = 0;
 			//PORTD = lights;
 			break;
@@ -372,15 +390,17 @@ int Sound_Tick(int sound_state){
 	switch(sound_state){
 		case S_start:
 			sound_state = S_wait;
+			/*
 			while(!USART_IsSendReady(0));
 			USART_Send(0, 0);
 			while(!USART_HasTransmitted(0));
+			*/
 			break;
 		case S_wait:
-			if ( ((PINC&0x01) == 1) && (S_count >= 1000) && !reset ){ //if sound detector, detects sound go to S_high
+			if ( ((PINC&0x01) == 1) && (S_count >= 10) && !reset ){ //if sound detector, detects sound go to S_high
 				sound_state = S_high;
 			}
-			else if (reset && (S_count >= 1000)){
+			else if (reset && (S_count >= 10)){
 				sound_state = S_reset;
 			}
 		
@@ -398,6 +418,7 @@ int Sound_Tick(int sound_state){
 			sound_state = S_wait;
 			break;
 		default:
+			sound_state = S_wait;
 			break;
 	}
 	switch(sound_state){
@@ -407,11 +428,17 @@ int Sound_Tick(int sound_state){
 			break;
 		case S_high:
 			sound = 1;
+			if (USART_IsSendReady(0)){
+				USART_Send(sound, 0);
+			}
 			//lights = lights | 0x04;
 			//PORTD = lights;
 			break;
 		case S_reset:
 			sound = 0;
+			if (USART_IsSendReady(0)){
+				USART_Send(sound, 0);
+			}
 			//lights = 0;
 			//PORTD = lights;
 			break;
@@ -430,9 +457,9 @@ int main(void){
 	initUSART(0);
 	USART_Flush(0);
 	
-	unsigned long int tempCalc = 2000;
-	unsigned long int soundCalc = 1000;
-	unsigned long int motionCalc = 2000;
+	unsigned long int tempCalc = 200;
+	unsigned long int soundCalc = 100;
+	unsigned long int motionCalc = 200;
 	
 	unsigned long int tmpGCD = 1;
 	tmpGCD = findGCD(tempCalc, soundCalc);

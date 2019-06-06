@@ -17,23 +17,17 @@
 #include <avr/io.h>
 
 void ADC_init() {
-	ADCSRA |= (1 << ADEN) | (1 << ADSC) | (1 << ADATE);
-	// ADEN: setting this bit enables analog-to-digital conversion.
-	// ADSC: setting this bit starts the first conversion.
-	// ADATE: setting this bit enables auto-triggering. Since we are
-	//        in Free Running Mode, a new conversion will trigger whenever
-	//        the previous conversion completes.
+	ADCSRA |= (1 << ADEN) | (1 << ADSC) | (1 << ADATE) | (0 << ADPS2) | (1 << ADPS1) | (1 << ADPS0); //Adjust ASPS2-0 for high resolution
 }
 
-
-// 76F or 25C is 176 in binary
-//125C max = 1+2+4+8+64+256 = 335 
-//1+2+4+32+128 = 167 @ 50F or 10C
+//room temperature: 25.7C 78.2F = 1+2+4+8+16+128 = 159
+//100F = 1+2+4+8+16+32+128 = 188
+//50F = 1+2+4+128= 135 
 
 int main(void)
 {
 	ADC_init();
-	DDRA = 0x00; PORTA = 0xFF;
+	DDRA = 0x00; PORTA = 0x00; // input high impedance 
 	DDRB = 0xFF; PORTB = 0x00;
 	DDRD = 0xFF; PORTD = 0x00;
 	unsigned short adcResult;

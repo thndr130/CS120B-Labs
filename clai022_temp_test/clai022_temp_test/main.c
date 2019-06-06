@@ -28,7 +28,7 @@ void ADC_init() {
 
 // 76F or 25C is 176 in binary
 //125C max = 1+2+4+8+64+256 = 335 
-//1+2+4+32+128 = 167 @ 50F
+//1+2+4+32+128 = 167 @ 50F or 10C
 
 int main(void)
 {

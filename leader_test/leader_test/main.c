@@ -1,10 +1,3 @@
-/*
- * CS122_Lab2_Part1_Leader.c
- *
- * Created: 10/5/2017 7:47:17 PM
- * Author : ethan
- */ 
-
 #include <avr/io.h>
 #include "timer.h"
 #include "scheduler.h"

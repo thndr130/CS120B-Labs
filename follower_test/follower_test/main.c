@@ -1,10 +1,3 @@
-/*
- * CS122A_Lab2.c
- *
- * Created: 10/5/2017 6:44:45 PM
- * Author : ethan
- */ 
-
 #include <avr/io.h>
 #include "timer.h"
 #include "scheduler.h"
